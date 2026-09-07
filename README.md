@@ -82,6 +82,24 @@ The SQL workflow is organized into the following stages:
 4. Returns and Cancellations
 5. Geographic Analysis
 
+## Assumptions and Caveats
+
+- Exact duplicate rows were removed using all eight source columns because
+  the dataset does not contain a unique transaction-line identifier.
+- Invoice numbers beginning with `C` were treated as cancellations.
+- Negative quantities were treated as returns, cancellations, or adjustments
+  because the dataset does not provide a separate return-reason field.
+- Revenue analysis includes completed product sales only and excludes
+  administrative and non-product stock codes.
+- Records with missing Customer ID were retained for sales analysis but
+  excluded from customer-level analysis.
+- New customers represent customers first observed within the dataset and may
+  not be genuinely new to the business.
+- December 2011 contains data only through 9 December, so it was excluded from
+  complete-month growth comparisons.
+- Market opportunity results are screening indicators rather than revenue
+  forecasts.
+
 ## Project Status
 
 - [x] Data profiling
