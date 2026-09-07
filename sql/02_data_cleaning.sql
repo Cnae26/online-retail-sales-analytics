@@ -26,8 +26,6 @@ Important:
 -- Drop the dependent view first
 -- ============================================================================
 
-DROP VIEW IF EXISTS retail_completed_sales;
-DROP VIEW IF EXISTS retail_transactions_clean;
 
 
 -- ============================================================================
