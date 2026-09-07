@@ -6,56 +6,76 @@ Database: PostgreSQL / Supabase
 
 Purpose:
 1. Standardize column names and data types
-2. Remove exact duplicate records
+2. Remove exact duplicate rows
 3. Convert invoice date from text to timestamp
-4. Calculate transaction-level revenue
-5. Classify completed sales, cancellations, and adjustments
+4. Calculate line-level sales amount
+5. Classify transaction status
 6. Separate product and non-product records
-7. Create an analysis-ready completed-sales view
+7. Create an analysis-ready completed sales view
 
-Important assumption:
-Exact duplicate rows are removed using SELECT DISTINCT because the source
-dataset does not contain a unique transaction-line identifier.
-
-The raw table online_retail is preserved without modification.
+Important:
+- The raw table online_retail is not modified.
+- Exact duplicate rows are removed using SELECT DISTINCT.
+- Customer ID is allowed to be NULL.
 ===============================================================================
 */
 
 
 -- ============================================================================
--- 1. CREATE CLEAN TRANSACTION VIEW
+-- 1. REMOVE OLD VIEWS
+-- Drop the dependent view first
+-- ============================================================================
+
+DROP VIEW IF EXISTS retail_completed_sales;
+DROP VIEW IF EXISTS retail_transactions_clean;
+
+
+-- ============================================================================
+-- 2. CREATE CLEAN TRANSACTION VIEW
+-- This view keeps completed sales, cancellations and adjustments
 -- ============================================================================
 
 CREATE OR REPLACE VIEW retail_transactions_clean AS
 
 WITH standardized_data AS (
     SELECT
-        NULLIF(TRIM("Invoice"), '') AS invoice_no,
+        -- Remove unnecessary spaces from invoice number
+        NULLIF(
+            TRIM("Invoice"),
+            ''
+        ) AS invoice_no,
 
+        -- Standardize StockCode as uppercase text
         NULLIF(
             UPPER(TRIM("StockCode")),
             ''
         ) AS stock_code,
 
+        -- Convert blank descriptions to NULL
         NULLIF(
             TRIM("Description"),
             ''
         ) AS description,
 
+        -- Convert Quantity to integer
         "Quantity"::integer AS quantity,
 
+        -- Convert text date into PostgreSQL timestamp
         TO_TIMESTAMP(
             NULLIF(TRIM("InvoiceDate"), ''),
             'DD/MM/YYYY HH24:MI'
         ) AS invoice_date,
 
-        "Price"::numeric(12, 2) AS unit_price,
+        -- Keep four decimal places to preserve prices such as 0.001
+        "Price"::numeric(12, 4) AS unit_price,
 
+        -- Keep missing Customer ID as NULL
         NULLIF(
             TRIM("Customer ID"),
             ''
         ) AS customer_id,
 
+        -- Convert blank countries to NULL
         NULLIF(
             TRIM("Country"),
             ''
@@ -65,6 +85,7 @@ WITH standardized_data AS (
 ),
 
 remove_duplicates AS (
+    -- Remove rows that are identical across all original fields
     SELECT DISTINCT
         invoice_no,
         stock_code,
@@ -88,18 +109,22 @@ SELECT
     customer_id,
     country,
 
+    -- Revenue at transaction-line level
     quantity::numeric * unit_price AS line_amount,
 
+    -- Cancellation flag
     COALESCE(
         invoice_no LIKE 'C%',
         FALSE
     ) AS is_cancelled,
 
+    -- Negative quantity flag
     COALESCE(
         quantity < 0,
         FALSE
     ) AS is_negative_quantity,
 
+    -- Classify each transaction
     CASE
         WHEN invoice_no IS NULL
             OR stock_code IS NULL
@@ -120,6 +145,7 @@ SELECT
         ELSE 'Completed Sale'
     END AS transaction_status,
 
+    -- Separate merchandise from administrative/service records
     CASE
         WHEN stock_code IS NULL
             THEN 'Unknown'
@@ -129,6 +155,7 @@ SELECT
             'DOT',
             'M',
             'D',
+            'PADS',
             'BANK CHARGES',
             'AMAZONFEE',
             'ADJUST'
@@ -142,23 +169,9 @@ FROM remove_duplicates;
 
 
 -- ============================================================================
--- 2. CREATE COMPLETED SALES VIEW
+-- 3. CREATE COMPLETED SALES VIEW
+-- Use this view for revenue and sales performance analysis
 -- ============================================================================
-
-/*
-This view contains only valid completed sales.
-
-Use this view for:
-- Total Revenue
-- Total Orders
-- Total Units Sold
-- Average Order Value
-- Monthly Sales Trend
-- Revenue Growth
-
-Do not use this view for returns or cancellation analysis because those
-transactions have already been excluded.
-*/
 
 CREATE OR REPLACE VIEW retail_completed_sales AS
 
@@ -180,7 +193,7 @@ WHERE transaction_status = 'Completed Sale';
 
 
 -- ============================================================================
--- 3. VALIDATION: PREVIEW CLEAN DATA
+-- 4. PREVIEW CLEANED DATA
 -- ============================================================================
 
 SELECT *
@@ -189,7 +202,7 @@ LIMIT 20;
 
 
 -- ============================================================================
--- 4. VALIDATION: CHECK DATE RANGE
+-- 5. CHECK TRANSACTION DATE RANGE
 -- ============================================================================
 
 SELECT
@@ -200,7 +213,7 @@ FROM retail_transactions_clean;
 
 
 -- ============================================================================
--- 5. VALIDATION: COMPARE RAW AND CLEANED ROW COUNTS
+-- 6. COMPARE RAW AND CLEANED ROW COUNTS
 -- ============================================================================
 
 SELECT
@@ -218,7 +231,7 @@ SELECT
 
 
 -- ============================================================================
--- 6. VALIDATION: TRANSACTION STATUS DISTRIBUTION
+-- 7. CHECK TRANSACTION STATUS DISTRIBUTION
 -- ============================================================================
 
 SELECT
@@ -233,7 +246,7 @@ ORDER BY total_rows DESC;
 
 
 -- ============================================================================
--- 7. VALIDATION: RECORD TYPE DISTRIBUTION
+-- 8. CHECK PRODUCT AND NON-PRODUCT DISTRIBUTION
 -- ============================================================================
 
 SELECT
@@ -248,7 +261,7 @@ ORDER BY total_rows DESC;
 
 
 -- ============================================================================
--- 8. VALIDATION: COMPLETED SALES SUMMARY
+-- 9. COMPLETED SALES SUMMARY
 -- ============================================================================
 
 SELECT
@@ -261,7 +274,8 @@ FROM retail_completed_sales;
 
 
 -- ============================================================================
--- 9. QUALITY CHECK: ALL RESULTS SHOULD BE ZERO
+-- 10. QUALITY CHECK
+-- All three results should be zero
 -- ============================================================================
 
 SELECT
