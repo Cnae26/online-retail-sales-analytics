@@ -60,7 +60,7 @@ Initial data profiling identified:
 - Non-product stock codes and adjustment records
 - An incomplete final month in December 2011
 
-The SQL used for data profiling is available here:
+
 
 ## SQL Analysis
 
