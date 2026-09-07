@@ -47,7 +47,17 @@ Initial data profiling identified:
 
 The SQL used for data profiling is available here:
 
-[View Data Profiling SQL](./sql/01_data_profiling.sql)
+## SQL Analysis
+
+The SQL workflow is organized into the following stages:
+
+1. [Data Profiling](./sql/01_data_profiling.sql)
+2. [Data Cleaning](./sql/02_data_cleaning.sql)
+3. [Executive Sales Analysis](./sql/03_executive_sales.sql)
+4. [Product Performance](./sql/04_product_performance.sql)
+5. [Customer Analytics](./sql/05_customer_analytics.sql)
+6. [Returns and Cancellations](./sql/06_returns_cancellations.sql)
+7. [Geographic Analysis](./sql/07_geographic_analysis.sql)
 
 ## Analysis Areas
 
