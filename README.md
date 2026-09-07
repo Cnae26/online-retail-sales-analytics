@@ -2,6 +2,21 @@
 End-to-end retail sales analysis using PostgreSQL, Supabase, and Power BI.
 [← Back to Portfolio](https://github.com/Cnae26/DATA-ANALYTICS-PORTFOLIO)
 
+## Data Source
+
+This project uses the
+[Online Retail II dataset from the UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/502/online%2Bretail%2Bii).
+
+The original dataset contains 1,067,371 transaction-line records covering
+December 2009 to December 2011. This project uses the `Year 2010-2011`
+worksheet, containing 541,910 rows from 1 December 2010 to 9 December 2011.
+
+The dataset is licensed under the Creative Commons Attribution 4.0
+International license (CC BY 4.0).
+
+**Citation:** Chen, D. (2012). Online Retail II [Dataset].
+UCI Machine Learning Repository. https://doi.org/10.24432/C5CG6D
+
 ## Project Background
 
 This project analyzes transaction-level data from a UK-based online retailer.
