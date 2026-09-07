@@ -59,4 +59,12 @@ The SQL used for data profiling is available here:
 
 ## Project Status
 
-Data profiling completed. Data cleaning and validation are in progress.
+- [x] Data profiling
+- [x] Data cleaning and validation
+- [x] Executive sales analysis
+- [x] Product performance analysis
+- [x] Customer analytics
+- [x] Returns and cancellations analysis
+- [x] Geographic analysis
+- [ ] Power BI dashboard
+- [ ] Business insights and recommendations
